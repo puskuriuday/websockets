@@ -12,8 +12,8 @@ interface signup {
 
 
 
-export const createUser = async ({ username , password , name }: signup): Promise<boolean> => {
-    const user = await Client.user.findMany({
+export const createUser = async ({ username , password , name }: signup): Promise<boolean | string> => {
+    const user = await Client.user.findUnique({
         where : {
             username : username
         }
@@ -24,15 +24,19 @@ export const createUser = async ({ username , password , name }: signup): Promis
     }
 
     const hashpassword = await bcrypt.hash(password,8);
-    await Client.user.create({
-        data:{
-            name,
-            username,
-            password:hashpassword,
-        }
-    })
-
-    return true;
+    try {
+        const User = await Client.user.create({
+            data : {
+                name,
+                username,
+                password : hashpassword
+            }
+        });
+        return true
+    } catch (error) {
+        console.error("DB Error:", error);
+        return "Database error";
+    }
 }
 
 export const userSchema = z.object({
