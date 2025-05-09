@@ -1,16 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt"
-import { z } from "zod"
+import { signin, signup, userType } from "./schema";
 
 const Client = new PrismaClient();
-
-interface signup {
-    name     : string
-    username : string
-    password : string
-}
-
-
 
 export const createUser = async ({ username , password , name }: signup): Promise<boolean | string> => {
     const user = await Client.user.findUnique({
@@ -39,8 +31,23 @@ export const createUser = async ({ username , password , name }: signup): Promis
     }
 }
 
-export const userSchema = z.object({
-    name     : z.string().min(3).max(10),
-    username : z.string().min(6).max(8),
-    password : z.string().min(8).max(15)
-})
+export const findUser = async ({ username , password }: signin ): Promise<userType | boolean | string> => {
+    try {
+        const user = await Client.user.findUnique({
+            where: {
+                username
+            }
+        });
+        if (!user) {
+            return false
+        }
+        const verfyPassword = await bcrypt.compare(password,user.password)
+        if (!verfyPassword) {
+            return "Invalid username and password";
+        }
+        return user;
+    } catch (error) {
+        console.error("error : ", error)
+        return "Database error";
+    }
+}
