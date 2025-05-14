@@ -11,7 +11,7 @@ export const createUser = async ({ username , password , name }: signup): Promis
         }
     });
 
-    if (!user) {
+    if (user) {
         return false;
     }
 
